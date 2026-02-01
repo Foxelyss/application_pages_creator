@@ -95,22 +95,27 @@ for x in unknownargs:
 
     document.add_paragraph("", style='code')
     line_count += 1
+
     if line_count > max_lines:
         document.add_page_break()
         a = document.add_paragraph("ПРОДОЛЖЕНИЕ ПРИЛОЖЕНИЯ " + application_letter)
         a.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 
         line_count = 0
+
     document.add_paragraph(x[x.find("code")+4:], style='code')
     line_count += 1
+
     if line_count > max_lines:
         document.add_page_break()
         a = document.add_paragraph("ПРОДОЛЖЕНИЕ ПРИЛОЖЕНИЯ " + application_letter)
         a.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 
         line_count = 0
+
     document.add_paragraph("", style='code')
     line_count += 1
+
     if line_count > max_lines:
         document.add_page_break()
         a = document.add_paragraph("ПРОДОЛЖЕНИЕ ПРИЛОЖЕНИЯ " + application_letter)
