@@ -12,8 +12,8 @@ parser = argparse.ArgumentParser(
     description="Создаёт документ в формате ворда",
     epilog="- Foxelyss",
 )
-parser.add_argument("--application", action='store',default="Б",nargs='?', help="Буква приложения")
-parser.add_argument("--file", action='store',default="application_b.docx",nargs='?', help="Файл записи")
+parser.add_argument("--application", action='store', default="Б", nargs='?', help="Буква приложения")
+parser.add_argument("--file", action='store', default="application_b.docx", nargs='?', help="Файл записи")
 args, unknownargs = parser.parse_known_args()
 
 application_letter = args.application
@@ -29,13 +29,10 @@ section = document.sections[0]
 section.page_width = Mm(210)  # A4 210 mm
 section.page_height = Mm(297)  # A4 297 mm
 
-section.left_margin = Mm(30)    # левое – 30 мм
-section.right_margin = Mm(15)   # правое – 15 мм
-section.top_margin = Mm(20)     # верхнее – 20 мм
+section.left_margin = Mm(30)  # левое – 30 мм
+section.right_margin = Mm(15)  # правое – 15 мм
+section.top_margin = Mm(20)  # верхнее – 20 мм
 section.bottom_margin = Mm(20)  # нижнее – 20 мм
-
-logger.info("Пишем в приложение "+ application_letter)
-document.add_heading("ПРИЛОЖЕНИЕ " + application_letter, 1)
 
 styles = document.styles
 
@@ -61,7 +58,6 @@ styles["Title"].paragraph_format.space_after = Cm(0)
 styles["Title"].paragraph_format.space_before = Cm(0)
 styles["Title"].paragraph_format.line_spacing_rule = WD_LINE_SPACING.ONE_POINT_FIVE
 
-
 styles["Heading 1"].font.name = None
 styles["Heading 1"].font.name = 'PT Astra Serif'
 styles["Heading 1"].font.bold = False
@@ -76,7 +72,7 @@ styles.add_style("code", WD_STYLE_TYPE.PARAGRAPH)
 
 styles["code"].font.name = 'PT Astra Serif'
 styles["code"].font.size = Pt(12)
-styles["code"].paragraph_format.first_line_indent = Cm(0)#Cm(1.25)
+styles["code"].paragraph_format.first_line_indent = Cm(0)  # Cm(1.25)
 styles["code"].paragraph_format.space_after = Cm(0)
 styles["code"].paragraph_format.space_before = Cm(0)
 styles["code"].paragraph_format.line_spacing_rule = WD_LINE_SPACING.SINGLE
@@ -85,6 +81,23 @@ max_length = 70
 max_lines = 47
 
 line_count = 0
+
+
+def add_break_increment(line_count: int, document: Document, step=1):
+    global max_lines
+    if line_count > max_lines:
+        document.add_page_break()
+        a = document.add_paragraph("ПРОДОЛЖЕНИЕ ПРИЛОЖЕНИЯ " + application_letter)
+        a.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+
+        return 0
+
+    return line_count + step
+
+
+logger.info("Пишем в приложение " + application_letter)
+document.add_heading("ПРИЛОЖЕНИЕ " + application_letter, 1)
+
 for x in unknownargs:
 
     if os.path.isdir(x) or not os.path.isfile(x):
@@ -94,47 +107,19 @@ for x in unknownargs:
     logger.info("Читаю файл: " + x)
 
     document.add_paragraph("", style='code')
-    line_count += 1
+    line_count = add_break_increment(line_count, document)
 
-    if line_count > max_lines:
-        document.add_page_break()
-        a = document.add_paragraph("ПРОДОЛЖЕНИЕ ПРИЛОЖЕНИЯ " + application_letter)
-        a.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-
-        line_count = 0
-
-    document.add_paragraph(x[x.find("code")+4:], style='code')
-    line_count += 1
-
-    if line_count > max_lines:
-        document.add_page_break()
-        a = document.add_paragraph("ПРОДОЛЖЕНИЕ ПРИЛОЖЕНИЯ " + application_letter)
-        a.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-
-        line_count = 0
+    document.add_paragraph(x[x.find("code") + 4:], style='code')
+    line_count = add_break_increment(line_count, document)
 
     document.add_paragraph("", style='code')
-    line_count += 1
-
-    if line_count > max_lines:
-        document.add_page_break()
-        a = document.add_paragraph("ПРОДОЛЖЕНИЕ ПРИЛОЖЕНИЯ " + application_letter)
-        a.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-
-        line_count = 0
+    line_count = add_break_increment(line_count, document)
 
     with open(x, "r") as file:
         for i in file.readlines():
-            line_count += 1 + len(i.replace(" ","")) // max_length
-            document.add_paragraph(i.replace("\n",""), style='code')
+            line_count = add_break_increment(line_count, document, 1 + len(i.replace(" ", "")) // max_length)
+            document.add_paragraph(i.replace("\n", ""), style='code')
 
-            if line_count > max_lines:
-                document.add_page_break()
-                a= document.add_paragraph("ПРОДОЛЖЕНИЕ ПРИЛОЖЕНИЯ "+ application_letter)
-                a.alignment=WD_ALIGN_PARAGRAPH.RIGHT
-
-                line_count = 0
-
-logger.info("Файл создан: "+ file_name)
+logger.info("Файл создан: " + file_name)
 
 document.save(file_name)
